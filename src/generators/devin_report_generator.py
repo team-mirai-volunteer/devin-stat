@@ -29,7 +29,7 @@ class DevinReportGenerator:
         summary = analysis.get("summary", {})
         daily_stats = analysis.get("daily_stats", {})
         success_patterns = analysis.get("success_patterns", {})
-        credit_estimation = analysis.get("credit_estimation", {})
+        acu_analysis = analysis.get("acu_analysis", {})
         
         report = f"""# Devin日次統計レポート
 
@@ -65,35 +65,45 @@ class DevinReportGenerator:
         
 
         
-        report += f"""
+        data_source = acu_analysis.get('data_source', 'estimated')
+        if data_source == 'actual_usage_history':
+            report += f"""
 
-- **推定総クレジット使用量**: {credit_estimation.get('total_estimated_credits', 0):,} クレジット
-- **PR作成あたり平均**: {credit_estimation.get('credits_per_pr', 0)} クレジット
-- **コスト効率**: {credit_estimation.get('cost_efficiency', 0):.1f} (成功率)
+- **実際のACU使用量**: {acu_analysis.get('total_acus', 0):.2f} ACU
+- **PR作成あたり平均**: {acu_analysis.get('acus_per_pr', 0):.2f} ACU
+- **PR関連セッション**: {acu_analysis.get('pr_sessions', 0)}件
+- **コスト効率**: {acu_analysis.get('cost_efficiency', 0):.1f} (成功率)
+
+"""
+        else:
+            report += f"""
+
+- **推定ACU使用量**: {acu_analysis.get('total_estimated_acus', 0):,} ACU
+- **PR作成あたり平均**: {acu_analysis.get('acus_per_pr', 0)} ACU
+- **コスト効率**: {acu_analysis.get('cost_efficiency', 0):.1f} (成功率)
 
 """
         
-        if api_data and api_data.get("api_available"):
-            report += f"""## 🔌 Devin API統計
+        if data_source == 'actual_usage_history':
+            report += """## 📊 Usage History統計
 
-- **API接続**: ✅ 利用可能
-- **PR関連セッション**: {api_data.get('total_pr_sessions', 0)}件
-- **実際のクレジット使用量**: {api_data.get('estimated_credits', 0):,} クレジット
-
+- **データソース**: ✅ 実際のUsage History
 """
-            api_daily = api_data.get("daily_stats", {})
-            if api_daily:
-                sorted_dates = sorted(api_daily.keys(), reverse=True)[:7]
+            daily_usage = acu_analysis.get('daily_usage', {})
+            if daily_usage:
+                report += "### 日別ACU使用量\n"
+                sorted_dates = sorted(daily_usage.keys(), reverse=True)[:7]
                 for date in sorted_dates:
-                    stats = api_daily[date]
-                    sessions = stats.get("pr_sessions", 0)
-                    credits = stats.get("estimated_credits", 0)
-                    report += f"- {date}: {sessions}セッション, {credits}クレジット\n"
+                    stats = daily_usage[date]
+                    sessions = stats.get("sessions", 0)
+                    acus = stats.get("acus", 0)
+                    report += f"- {date}: {sessions}セッション, {acus:.2f} ACU\n"
         else:
-            report += """## 🔌 Devin API統計
+            report += """## 📊 Usage History統計
 
-- **API接続**: ❌ 利用不可（DEVIN_API_TOKENが設定されていません）
-- **推定値**: 上記のクレジット使用量は推定値です
+- **データソース**: ❌ 手動データ未提供
+- **推定値**: 上記のACU使用量は推定値です
+- **データ提供方法**: `python scripts/convert_usage_history.py` でテキストデータをCSVに変換
 
 """
         

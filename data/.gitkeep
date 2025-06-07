@@ -1,0 +1,13 @@
+# データディレクトリ
+
+このディレクトリにUsage Historyファイルを配置してください：
+
+- `usage_history.csv` - Usage HistoryのCSVファイル
+- `usage_history.json` - Usage HistoryのJSONファイル
+
+## ファイル作成方法
+
+```bash
+# テキストデータからCSVを作成
+python scripts/convert_usage_history.py usage_history.txt data/usage_history.csv
+```

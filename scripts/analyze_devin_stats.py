@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.collectors.devin_pr_collector import DevinPRCollector
 from src.collectors.devin_api_client import DevinAPIClient
+from src.collectors.usage_history_collector import UsageHistoryCollector
 from src.analyzers.devin_stats_analyzer import DevinStatsAnalyzer
 from src.generators.devin_report_generator import DevinReportGenerator
 from src.utils.github_api import load_config
@@ -40,6 +41,10 @@ def parse_args():
         "--console-only",
         help="コンソール出力のみ（ファイル保存なし）",
         action="store_true"
+    )
+    parser.add_argument(
+        "--usage-file",
+        help="Usage HistoryファイルのパスCSV/JSON形式）"
     )
     return parser.parse_args()
 
@@ -73,9 +78,22 @@ def main():
     
     print("\n2. 詳細統計分析中...")
     analyzer = DevinStatsAnalyzer(config)
-    analysis = analyzer.generate_comprehensive_analysis(devin_prs)
     
-    print("\n3. Devin API統計取得中...")
+    usage_data = None
+    if args.usage_file:
+        print(f"3. Usage Historyデータ読み込み中: {args.usage_file}")
+        usage_collector = UsageHistoryCollector()
+        usage_data = usage_collector.load_usage_data(args.usage_file)
+        if usage_data:
+            print(f"   ✅ {len(usage_data)}件のセッションデータを読み込みました")
+        else:
+            print("   ⚠️ Usage Historyデータの読み込みに失敗しました")
+    else:
+        print("3. Usage Historyファイルが指定されていません（推定値を使用）")
+    
+    analysis = analyzer.generate_comprehensive_analysis(devin_prs, usage_data)
+    
+    print("\n4. Devin API統計取得中...")
     api_client = DevinAPIClient(config)
     api_data = api_client.analyze_pr_related_sessions()
     
@@ -84,7 +102,7 @@ def main():
     else:
         print("  ⚠️ API接続不可（DEVIN_API_TOKENが未設定）")
     
-    print("\n4. レポート生成中...")
+    print("\n5. レポート生成中...")
     generator = DevinReportGenerator(config)
     
     if args.console_only:

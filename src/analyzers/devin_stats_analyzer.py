@@ -96,26 +96,39 @@ class DevinStatsAnalyzer:
             "success_rate": success_rate
         }
 
-    def estimate_credit_usage(self, devin_prs: List[Dict]) -> Dict:
-        """クレジット使用量を推定する"""
+    def analyze_acu_usage(self, devin_prs: List[Dict], usage_data: Optional[List[Dict]] = None) -> Dict:
+        """ACU使用量を分析する（実データまたは推定値）"""
         total_prs = len(devin_prs)
-        
-        estimated_credits_per_pr = 50
-        
-        total_estimated_credits = total_prs * estimated_credits_per_pr
-        
         merged_prs = sum(1 for pr in devin_prs if pr.get("basic_info", {}).get("merged_at"))
         failed_prs = total_prs - merged_prs
         
-        return {
-            "total_estimated_credits": total_estimated_credits,
-            "credits_per_pr": estimated_credits_per_pr,
-            "credits_for_merged": merged_prs * estimated_credits_per_pr,
-            "credits_for_failed": failed_prs * estimated_credits_per_pr,
-            "cost_efficiency": (merged_prs / total_prs) if total_prs > 0 else 0
-        }
+        if usage_data:
+            from ..collectors.usage_history_collector import UsageHistoryCollector
+            collector = UsageHistoryCollector()
+            pr_analysis = collector.analyze_pr_related_sessions(usage_data, devin_prs)
+            
+            return {
+                "data_source": "actual_usage_history",
+                "total_acus": pr_analysis["total_pr_acus"],
+                "acus_per_pr": pr_analysis["avg_acus_per_pr"],
+                "pr_sessions": pr_analysis["total_pr_sessions"],
+                "daily_usage": pr_analysis["daily_usage"],
+                "cost_efficiency": (merged_prs / total_prs) if total_prs > 0 else 0
+            }
+        else:
+            estimated_acus_per_pr = 50
+            total_estimated_acus = total_prs * estimated_acus_per_pr
+            
+            return {
+                "data_source": "estimated",
+                "total_estimated_acus": total_estimated_acus,
+                "acus_per_pr": estimated_acus_per_pr,
+                "acus_for_merged": merged_prs * estimated_acus_per_pr,
+                "acus_for_failed": failed_prs * estimated_acus_per_pr,
+                "cost_efficiency": (merged_prs / total_prs) if total_prs > 0 else 0
+            }
 
-    def generate_comprehensive_analysis(self, devin_prs: List[Dict]) -> Dict:
+    def generate_comprehensive_analysis(self, devin_prs: List[Dict], usage_data: Optional[List[Dict]] = None) -> Dict:
         """包括的な分析を実行する"""
         if not devin_prs:
             return {"error": "分析対象のDevin PRがありません"}
@@ -129,7 +142,7 @@ class DevinStatsAnalyzer:
             "daily_stats": self.analyze_daily_stats(devin_prs),
             "monthly_stats": self.analyze_monthly_stats(devin_prs),
             "success_patterns": self.analyze_success_patterns(devin_prs),
-            "credit_estimation": self.estimate_credit_usage(devin_prs)
+            "acu_analysis": self.analyze_acu_usage(devin_prs, usage_data)
         }
         
         return analysis
