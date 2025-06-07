@@ -1,0 +1,53 @@
+
+github:
+  pr_data_repo: "team-mirai-volunteer/pr-data"
+  policy_repo: "team-mirai/policy"
+  token_env_var: "GITHUB_TOKEN"
+  api_base_url: "https://api.github.com"
+
+devin_api:
+  base_url: "https://api.devin.ai/v1"
+  token_env_var: "DEVIN_API_TOKEN"
+  endpoints:
+    consumption: "/enterprise/consumption"
+    sessions: "/sessions"
+
+data:
+  pr_data_dir: "../pr-data/prs"
+  reports_dir: "./reports"
+  temp_dir: "./temp"
+
+analysis:
+  devin_patterns:
+    - "devin-ai-integration[bot]"
+    - "devin-ai-integration"
+    - "devin"
+  
+  default_analysis_days: 30
+  
+  policy_areas:
+    - "その他政策"
+    - "[システム]"
+    - "行政改革"
+    - "教育"
+    - "子育て"
+    - "経済"
+    - "環境"
+
+api:
+  retry_count: 3
+  rate_limit_wait: true
+  request_delay: 0.5
+  timeout: 30
+
+reporting:
+  daily_reports: true
+  monthly_summary: true
+  notifications:
+    slack_webhook: ""  # オプション
+    email: ""          # オプション
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "./logs/devin_stats.log"
