@@ -1,0 +1,24 @@
+# Core dependencies
+requests>=2.31.0
+pyyaml>=6.0
+python-dateutil>=2.8.2
+
+# Data analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization (optional)
+matplotlib>=3.7.0
+plotly>=5.15.0
+
+# API utilities
+backoff>=2.2.1
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Development
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
