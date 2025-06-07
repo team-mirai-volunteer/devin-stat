@@ -28,7 +28,6 @@ class DevinReportGenerator:
         
         summary = analysis.get("summary", {})
         daily_stats = analysis.get("daily_stats", {})
-        policy_areas = analysis.get("policy_areas", {})
         success_patterns = analysis.get("success_patterns", {})
         credit_estimation = analysis.get("credit_estimation", {})
         
@@ -64,13 +63,7 @@ class DevinReportGenerator:
         else:
             report += "- データなし\n"
         
-        report += "\n## 🏷️ 政策分野別統計\n\n"
-        if policy_areas:
-            sorted_areas = sorted(policy_areas.items(), key=lambda x: x[1], reverse=True)
-            for area, count in sorted_areas:
-                report += f"- **{area}**: {count}件\n"
-        else:
-            report += "- データなし\n"
+
         
         report += f"""
 

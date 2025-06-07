@@ -10,7 +10,7 @@ Devin AIが作成したプルリクエスト（PR）の統計分析とレポー�
 - **日別・月別統計**: PR作成数、マージ数、成功率の時系列分析
 - **クレジット使用量追跡**: Devin APIを使用した実際のクレジット消費量取得
 - **自動レポート生成**: 日次・月次レポートの自動生成
-- **政策分野別分析**: 政策分野ごとのDevin貢献度分析
+
 
 ## システム構成
 
@@ -51,9 +51,11 @@ pip install -r requirements.txt
 # GitHub API用（必須）
 export GITHUB_TOKEN="your_github_token"
 
-# Devin API用（オプション - より詳細な統計のため）
+# Devin API用（オプション - 実際のクレジット使用量取得のため）
 export DEVIN_API_TOKEN="your_devin_api_token"
 ```
+
+**DEVIN_API_TOKEN取得方法**: [docs/devin_api_setup.md](docs/devin_api_setup.md)を参照
 
 ### 3. 設定ファイルの確認
 
@@ -105,10 +107,7 @@ GitHub Actionsワークフローが毎日04:00 UTC（13:00 JST）に自動実行
 - 成功率（マージ率）
 - 日別・月別作成・マージ数
 
-### 政策分野別統計
-- 政策分野ごとのPR数
-- 分野別成功率
-- 貢献度ランキング
+
 
 ### クレジット使用量（Devin API利用時）
 - 日別・月別クレジット消費量
@@ -142,9 +141,7 @@ GitHub Actionsワークフローが毎日04:00 UTC（13:00 JST）に自動実行
 - 2025-05-22: 5件マージ
 - 2025-05-20: 3件マージ
 
-## 🏷️ 政策分野別統計
-- その他政策: 7件
-- [システム]: 2件
+
 ```
 
 ## トラブルシューティング
@@ -182,7 +179,7 @@ python scripts/analyze_devin_stats.py --console-only 2>&1 | tee analysis.log
 
 `config/settings.yaml`で以下をカスタマイズ可能：
 - 分析対象期間
-- 政策分野のマッピング
+
 - レポート出力形式
 - API設定
 

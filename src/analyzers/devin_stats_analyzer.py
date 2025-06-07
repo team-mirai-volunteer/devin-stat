@@ -70,23 +70,7 @@ class DevinStatsAnalyzer:
             "monthly_merged": dict(monthly_merged)
         }
 
-    def analyze_policy_areas(self, devin_prs: List[Dict]) -> Dict:
-        """政策分野別統計を分析する"""
-        policy_areas = defaultdict(int)
-        
-        for pr in devin_prs:
-            labels = pr.get("labels", [])
-            
-            if not labels:
-                policy_areas["その他政策"] += 1
-                continue
-            
-            for label in labels:
-                label_name = label.get("name", "")
-                if label_name:
-                    policy_areas[label_name] += 1
-        
-        return dict(policy_areas)
+
 
     def analyze_success_patterns(self, devin_prs: List[Dict]) -> Dict:
         """成功パターンを分析する"""
@@ -144,7 +128,6 @@ class DevinStatsAnalyzer:
             },
             "daily_stats": self.analyze_daily_stats(devin_prs),
             "monthly_stats": self.analyze_monthly_stats(devin_prs),
-            "policy_areas": self.analyze_policy_areas(devin_prs),
             "success_patterns": self.analyze_success_patterns(devin_prs),
             "credit_estimation": self.estimate_credit_usage(devin_prs)
         }
