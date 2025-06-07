@@ -89,15 +89,33 @@ class DevinReportGenerator:
 
 - **データソース**: ✅ 実際のUsage History
 """
-            daily_usage = acu_analysis.get('daily_usage', {})
-            if daily_usage:
-                report += "### 日別ACU使用量\n"
-                sorted_dates = sorted(daily_usage.keys(), reverse=True)[:7]
-                for date in sorted_dates:
-                    stats = daily_usage[date]
-                    sessions = stats.get("sessions", 0)
-                    acus = stats.get("acus", 0)
-                    report += f"- {date}: {sessions}セッション, {acus:.2f} ACU\n"
+            from ..collectors.usage_history_collector import UsageHistoryCollector
+            collector = UsageHistoryCollector()
+            
+            usage_data_path = 'data/usage_history.csv'
+            if os.path.exists(usage_data_path):
+                complete_usage_data = collector.load_usage_data(usage_data_path)
+                complete_summary = collector.generate_usage_summary(complete_usage_data)
+                complete_daily = complete_summary.get('daily_summary', {})
+                
+                if complete_daily:
+                    report += "### 日別ACU使用量（全セッション）\n"
+                    sorted_dates = sorted(complete_daily.keys(), reverse=True)
+                    for date in sorted_dates:
+                        stats = complete_daily[date]
+                        sessions = stats.get("sessions", 0)
+                        acus = stats.get("acus", 0)
+                        report += f"- {date}: {sessions}セッション, {acus:.2f} ACU\n"
+            else:
+                daily_usage = acu_analysis.get('daily_usage', {})
+                if daily_usage:
+                    report += "### 日別ACU使用量（PR関連のみ）\n"
+                    sorted_dates = sorted(daily_usage.keys(), reverse=True)[:7]
+                    for date in sorted_dates:
+                        stats = daily_usage[date]
+                        sessions = stats.get("sessions", 0)
+                        acus = stats.get("acus", 0)
+                        report += f"- {date}: {sessions}セッション, {acus:.2f} ACU\n"
         else:
             report += """## 📊 Usage History統計
 
