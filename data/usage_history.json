@@ -1,0 +1,360 @@
+{
+  "metadata": {
+    "last_updated": "2025-06-12 03:42:10 UTC",
+    "total_records": 70,
+    "description": "Devin usage history data",
+    "format_version": "1.0"
+  },
+  "data": [
+    {
+      "session": "Slack message about commits",
+      "created_at": "2025-06-12",
+      "acus_used": 0.44
+    },
+    {
+      "session": "README更新とアーカイブ",
+      "created_at": "2025-06-12",
+      "acus_used": 0.37
+    },
+    {
+      "session": "データ整合性チェック",
+      "created_at": "2025-06-12",
+      "acus_used": 0.56
+    },
+    {
+      "session": "Improve policy-pr-hub requirements",
+      "created_at": "2025-06-11",
+      "acus_used": 0.97
+    },
+    {
+      "session": "Vite OGP表示問題",
+      "created_at": "2025-06-11",
+      "acus_used": 0.49
+    },
+    {
+      "session": "PR対応統合と報告",
+      "created_at": "2025-06-10",
+      "acus_used": 6.0
+    },
+    {
+      "session": "Untitled",
+      "created_at": "2025-06-10",
+      "acus_used": 0.0
+    },
+    {
+      "session": "ファイル名をタイトルに変更",
+      "created_at": "2025-06-10",
+      "acus_used": 1.33
+    },
+    {
+      "session": "データ整合性チェック修正",
+      "created_at": "2025-06-10",
+      "acus_used": 0.4
+    },
+    {
+      "session": "PR統計JSON出力コード作成",
+      "created_at": "2025-06-10",
+      "acus_used": 4.07
+    },
+    {
+      "session": "Slack PR label report",
+      "created_at": "2025-06-10",
+      "acus_used": 7.82
+    },
+    {
+      "session": "解説とコンフリクト解消",
+      "created_at": "2025-06-10",
+      "acus_used": 0.29
+    },
+    {
+      "session": "Slack PR analysis status",
+      "created_at": "2025-06-10",
+      "acus_used": 0.82
+    },
+    {
+      "session": "README修正",
+      "created_at": "2025-06-10",
+      "acus_used": 0.98
+    },
+    {
+      "session": "私の権限でできること",
+      "created_at": "2025-06-10",
+      "acus_used": 0.23
+    },
+    {
+      "session": "リポジトリ列挙",
+      "created_at": "2025-06-10",
+      "acus_used": 2.11
+    },
+    {
+      "session": "Slack message milestone summary",
+      "created_at": "2025-06-09",
+      "acus_used": 2.11
+    },
+    {
+      "session": "pr_analysisローカル環境構築方法",
+      "created_at": "2025-06-09",
+      "acus_used": 0.24
+    },
+    {
+      "session": "GitHub Action PR Merge Notification",
+      "created_at": "2025-06-08",
+      "acus_used": 0.67
+    },
+    {
+      "session": "10段階ヒストグラム作成",
+      "created_at": "2025-06-08",
+      "acus_used": 0.76
+    },
+    {
+      "session": "fact-checker issue確認",
+      "created_at": "2025-06-08",
+      "acus_used": 12.14
+    },
+    {
+      "session": "リポジトリ権限確認",
+      "created_at": "2025-06-08",
+      "acus_used": 0.55
+    },
+    {
+      "session": "プルリクエストコメント集計",
+      "created_at": "2025-06-08",
+      "acus_used": 1.25
+    },
+    {
+      "session": "collect public repo stats",
+      "created_at": "2025-06-08",
+      "acus_used": 2.25
+    },
+    {
+      "session": "Explain issue in Slack",
+      "created_at": "2025-06-08",
+      "acus_used": 2.71
+    },
+    {
+      "session": "Received Slack message",
+      "created_at": "2025-06-07",
+      "acus_used": 0.19
+    },
+    {
+      "session": "issue実装依頼",
+      "created_at": "2025-06-07",
+      "acus_used": 1.05
+    },
+    {
+      "session": "Devin API 統計作成",
+      "created_at": "2025-06-07",
+      "acus_used": 3.11
+    },
+    {
+      "session": "PRレビュー準備",
+      "created_at": "2025-06-07",
+      "acus_used": 1.84
+    },
+    {
+      "session": "Change postermap headers title",
+      "created_at": "2025-06-07",
+      "acus_used": 2.63
+    },
+    {
+      "session": "After Effects intro outro animation",
+      "created_at": "2025-06-07",
+      "acus_used": 0.56
+    },
+    {
+      "session": "Slack issue implementation",
+      "created_at": "2025-06-07",
+      "acus_used": 22.87
+    },
+    {
+      "session": "OpenRouter対応とGemini使用確認",
+      "created_at": "2025-06-07",
+      "acus_used": 0.36
+    },
+    {
+      "session": "Slack message about duplicate issues",
+      "created_at": "2025-06-07",
+      "acus_used": 0.42
+    },
+    {
+      "session": "github連携確認",
+      "created_at": "2025-06-07",
+      "acus_used": 0.17
+    },
+    {
+      "session": "Slack AIあんの環境構築",
+      "created_at": "2025-06-07",
+      "acus_used": 15.1
+    },
+    {
+      "session": "issue実装依頼",
+      "created_at": "2025-06-06",
+      "acus_used": 11.88
+    },
+    {
+      "session": "issue実装依頼",
+      "created_at": "2025-06-06",
+      "acus_used": 2.57
+    },
+    {
+      "session": "欠番分析修正",
+      "created_at": "2025-06-05",
+      "acus_used": 2.41
+    },
+    {
+      "session": "Github Actions PR収集問題",
+      "created_at": "2025-06-05",
+      "acus_used": 2.25
+    },
+    {
+      "session": "issue実装とマイグレーション作成",
+      "created_at": "2025-06-05",
+      "acus_used": 0.69
+    },
+    {
+      "session": "issue実装とマイグレーション作成",
+      "created_at": "2025-06-05",
+      "acus_used": 7.82
+    },
+    {
+      "session": "issue実装とマイグレーション作成",
+      "created_at": "2025-06-05",
+      "acus_used": 0.57
+    },
+    {
+      "session": "Slack message issue update",
+      "created_at": "2025-06-03",
+      "acus_used": 1.58
+    },
+    {
+      "session": "Fix bug in Slack message",
+      "created_at": "2025-06-03",
+      "acus_used": 7.54
+    },
+    {
+      "session": "OpenRouter対応と音声合成改善",
+      "created_at": "2025-06-02",
+      "acus_used": 0.5
+    },
+    {
+      "session": "日次PRデータ収集改善",
+      "created_at": "2025-06-02",
+      "acus_used": 4.9
+    },
+    {
+      "session": "Create knowledge repo",
+      "created_at": "2025-06-02",
+      "acus_used": 0.71
+    },
+    {
+      "session": "GitHub PRデータ検証",
+      "created_at": "2025-05-31",
+      "acus_used": 12.37
+    },
+    {
+      "session": "Slack message about map display",
+      "created_at": "2025-05-31",
+      "acus_used": 1.41
+    },
+    {
+      "session": "Slack issue対応計画提示",
+      "created_at": "2025-05-31",
+      "acus_used": 16.18
+    },
+    {
+      "session": "HTMLレンダリング改善",
+      "created_at": "2025-05-30",
+      "acus_used": 2.56
+    },
+    {
+      "session": "Slack channel information update",
+      "created_at": "2025-05-30",
+      "acus_used": 5.42
+    },
+    {
+      "session": "Slack message volunteer questions",
+      "created_at": "2025-05-29",
+      "acus_used": 1.21
+    },
+    {
+      "session": "Slack repo setup",
+      "created_at": "2025-05-29",
+      "acus_used": 3.23
+    },
+    {
+      "session": "Slack channel rate limit issue",
+      "created_at": "2025-05-28",
+      "acus_used": 4.61
+    },
+    {
+      "session": "YouTube動画一覧CSV",
+      "created_at": "2025-05-28",
+      "acus_used": 3.35
+    },
+    {
+      "session": "Github Action移植設計",
+      "created_at": "2025-05-27",
+      "acus_used": 9.69
+    },
+    {
+      "session": "Check GitHub link",
+      "created_at": "2025-05-27",
+      "acus_used": 1.12
+    },
+    {
+      "session": "Received Slack message",
+      "created_at": "2025-05-18",
+      "acus_used": 0.35
+    },
+    {
+      "session": "Change metadata titles",
+      "created_at": "2025-05-07",
+      "acus_used": 0.6
+    },
+    {
+      "session": "Add demo URLs to Readme",
+      "created_at": "2025-05-07",
+      "acus_used": 0.55
+    },
+    {
+      "session": "動かせるか確認",
+      "created_at": "2025-05-07",
+      "acus_used": 0.2
+    },
+    {
+      "session": "PR422コンフリクト解決",
+      "created_at": "2025-05-07",
+      "acus_used": 2.37
+    },
+    {
+      "session": "PR review for kouchou-ai",
+      "created_at": "2025-05-07",
+      "acus_used": 0.46
+    },
+    {
+      "session": "Share Devinwiki on GitHub",
+      "created_at": "2025-05-06",
+      "acus_used": 0.51
+    },
+    {
+      "session": "Polimoney devin wiki日本語訳",
+      "created_at": "2025-05-06",
+      "acus_used": 0.86
+    },
+    {
+      "session": "ListFilterアイコン変更場所洗い出し",
+      "created_at": "2025-05-06",
+      "acus_used": 0.53
+    },
+    {
+      "session": "コードレビュー",
+      "created_at": "2025-05-06",
+      "acus_used": 0.54
+    },
+    {
+      "session": "Polimoney wiki反映",
+      "created_at": "2025-05-06",
+      "acus_used": 1.08
+    }
+  ]
+}
