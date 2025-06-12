@@ -8,6 +8,10 @@ devin_usage:
   manual_data_input: true
   usage_history_file: "./data/usage_history.csv"
   supported_formats: ["csv", "json"]
+  browser_data_input: true
+  browser_data_file: "./data/usage_history_browser.json"
+  merge_browser_data: true
+  browser_collection_method: "chrome_devtools"
 
 data:
   pr_data_dir: "../pr-data/prs"
