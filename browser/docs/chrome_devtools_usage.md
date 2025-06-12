@@ -102,19 +102,29 @@ python scripts/csv_to_json_converter.py --merge-browser-data
 1. **401 Unauthorized エラー**
    - Devin管理コンソールにログインしていることを確認
    - ページを再読み込みしてから再実行
+   - 管理者権限があることを確認
+   - セッションが期限切れの場合は再ログイン
 
 2. **403 Forbidden エラー**
    - 組織の管理者権限があることを確認
    - billing/usage データへのアクセス権限を確認
+   - 組織IDが正しいことを確認
 
 3. **CORS エラー**
    - 同じタブでDevin管理コンソールが開いていることを確認
    - 他のタブやウィンドウからは実行しない
+   - ブラウザの拡張機能が干渉していないか確認
 
 4. **データが取得できない**
    - 組織IDが正しいことを確認
    - ネットワーク接続を確認
    - APIエンドポイントの変更がないか確認
+   - `debugNetworkRequests()` を実行してAPIリクエストを監視
+
+5. **認証トークンの問題**
+   - ブラウザの開発者ツールでApplicationタブを確認
+   - Local StorageやSession Storageに認証情報があるか確認
+   - Cookiesに必要な認証情報があるか確認
 
 ### デバッグ方法
 
@@ -126,7 +136,41 @@ collector.collectAllSessions().then(data => {
 }).catch(error => {
     console.error('エラー詳細:', error);
 });
+
+// ネットワークリクエストを監視
+debugNetworkRequests();
+
+// 認証情報を確認
+console.log('CSRFトークン:', collector.getCSRFToken());
+console.log('認証トークン:', collector.getAuthToken());
+
+// 手動でAPIリクエストをテスト
+fetch('https://api.devin.ai/org_AgnIPhGma3zfPVXZ/billing/usage/sessions?page=1&page_size=1', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+}).then(response => {
+    console.log('テストリクエスト結果:', response.status, response.statusText);
+    return response.json();
+}).then(data => {
+    console.log('テストデータ:', data);
+}).catch(error => {
+    console.error('テストエラー:', error);
+});
 ```
+
+### APIエンドポイントの確認方法
+
+1. **ブラウザの開発者ツールを開く**
+2. **Networkタブを選択**
+3. **管理コンソールで何かアクションを実行**（ページ更新、メニュークリックなど）
+4. **`sessions`を含むリクエストを探す**
+5. **リクエストヘッダーとレスポンスを確認**
+
+実際のAPIエンドポイントやヘッダー情報が異なる場合は、スクリプトを調整する必要があります。
 
 ## セキュリティ考慮事項
 
