@@ -29,9 +29,15 @@ devin-stat/
 │   └── utils/                 # ユーティリティ
 │       ├── github_api.py
 │       └── devin_api.py
+├── browser/                   # ブラウザベースツール
+│   ├── scripts/
+│   │   └── devin_session_collector.js
+│   └── docs/
+│       └── chrome_devtools_usage.md
 ├── scripts/                   # 実行スクリプト
 │   ├── analyze_devin_stats.py
-│   └── generate_daily_report.py
+│   ├── generate_daily_report.py
+│   └── integrate_browser_data.py
 ├── .github/workflows/         # GitHub Actions
 │   └── daily_devin_stats.yml
 └── reports/                   # 生成されたレポート
@@ -79,6 +85,28 @@ python scripts/analyze_devin_stats.py --output-dir ./reports
 # 特定のPRデータディレクトリを指定
 python scripts/analyze_devin_stats.py --pr-data-dir /path/to/pr-data/prs
 ```
+
+### ブラウザベースのデータ収集
+
+Chrome DevToolsを使用して、Devin管理コンソールから直接セッションデータを収集することも可能です：
+
+```bash
+# ブラウザツールのドキュメントを参照
+cat browser/docs/chrome_devtools_usage.md
+```
+
+**使用方法**:
+1. Devin管理コンソールにログイン
+2. Chrome DevToolsのConsoleタブを開く
+3. `browser/scripts/devin_session_collector.js` を実行
+4. `startCollection()` でデータ収集開始
+
+**メリット**:
+- API認証不要（ブラウザのログイン状態を使用）
+- リアルタイムデータ収集
+- 手動での詳細確認が可能
+
+詳細は [browser/docs/chrome_devtools_usage.md](browser/docs/chrome_devtools_usage.md) を参照してください。
 
 ### 日次レポート生成
 
