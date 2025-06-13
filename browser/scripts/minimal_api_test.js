@@ -48,6 +48,132 @@ function getAuthTokens() {
     return tokens;
 }
 
+function extractAuth0AccessTokens() {
+    const accessTokens = [];
+    
+    console.log('🔍 Auth0アクセストークンを抽出中...');
+    
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        
+        if (key && key.includes('@@auth0spajs@@') && key.includes('backend.webapp.devin.ai')) {
+            try {
+                const value = localStorage.getItem(key);
+                const authData = JSON.parse(value);
+                
+                if (authData && authData.body && authData.body.access_token) {
+                    const tokenInfo = {
+                        key: key,
+                        access_token: authData.body.access_token,
+                        token_type: authData.body.token_type || 'Bearer',
+                        expires_in: authData.body.expires_in,
+                        scope: authData.body.scope
+                    };
+                    
+                    accessTokens.push(tokenInfo);
+                    console.log(`✅ Access Token発見: ${key.substring(0, 50)}...`);
+                    console.log(`   Token Type: ${tokenInfo.token_type}`);
+                    console.log(`   Token: ${tokenInfo.access_token.substring(0, 30)}...`);
+                    console.log(`   Expires In: ${tokenInfo.expires_in || 'N/A'}`);
+                    console.log(`   Scope: ${tokenInfo.scope || 'N/A'}`);
+                }
+            } catch (error) {
+                console.log(`❌ JSON解析エラー (${key}):`, error.message);
+            }
+        }
+    }
+    
+    console.log(`🔑 合計 ${accessTokens.length} 個のアクセストークンを抽出`);
+    return accessTokens;
+}
+
+async function testWithBearerTokens() {
+    console.log('🚀 Bearerトークンテストを開始');
+    
+    const accessTokens = extractAuth0AccessTokens();
+    
+    if (accessTokens.length === 0) {
+        console.log('❌ 有効なアクセストークンが見つかりません');
+        return { success: false, reason: 'no_tokens' };
+    }
+    
+    const testEndpoints = [
+        {
+            name: 'billing/usage/sessions エンドポイント',
+            url: `${BASE_URL}/org_${ORG_ID}/billing/usage/sessions`,
+            params: {
+                page: 1,
+                page_size: 20
+            }
+        },
+        {
+            name: 'sessions エンドポイント',
+            url: `${BASE_URL}/org_${ORG_ID}/sessions`,
+            params: {
+                creators: 'google-oauth2|112643481944466832095',
+                created_date_from: '2025-06-11T15:00:00.000Z',
+                created_date_to: '2099-12-31T14:59:59.999Z',
+                is_archived: 'false'
+            }
+        }
+    ];
+    
+    for (const tokenInfo of accessTokens) {
+        console.log(`\n🔑 テスト中のトークン: ${tokenInfo.key.substring(0, 50)}...`);
+        
+        for (const endpoint of testEndpoints) {
+            console.log(`\n🧪 テスト: ${endpoint.name}`);
+            
+            const queryParams = new URLSearchParams(endpoint.params);
+            const fullUrl = `${endpoint.url}?${queryParams}`;
+            
+            const headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `${tokenInfo.token_type} ${tokenInfo.access_token}`
+            };
+            
+            console.log(`📍 URL: ${fullUrl}`);
+            console.log(`📋 Authorization: ${tokenInfo.token_type} ${tokenInfo.access_token.substring(0, 20)}...`);
+            
+            try {
+                const response = await fetch(fullUrl, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: headers
+                });
+                
+                console.log(`✅ ステータス: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🎉 成功! この設定が動作します!');
+                    console.log('📊 レスポンス構造:', Object.keys(data));
+                    console.log('📊 データサンプル:', JSON.stringify(data).substring(0, 200) + '...');
+                    
+                    return {
+                        success: true,
+                        endpoint: endpoint,
+                        tokenInfo: tokenInfo,
+                        headers: headers,
+                        data: data
+                    };
+                } else {
+                    const errorText = await response.text();
+                    console.log('❌ エラー:', errorText.substring(0, 100));
+                }
+            } catch (error) {
+                console.log('❌ リクエストエラー:', error.message);
+            }
+            
+            console.log('─'.repeat(50));
+        }
+    }
+    
+    console.log('\n❌ 全てのBearerトークンテストが失敗しました');
+    return { success: false, reason: 'all_failed' };
+}
+
 /**
  * 最速テスト: 最も可能性の高い方法を試す
  */
@@ -582,7 +708,7 @@ async function comprehensiveTest() {
     console.log('='.repeat(60));
     
     console.log('\n📋 ステップ1: 認証情報確認');
-    const tokens = testAuthInfo();
+    const authInfo = testAuthInfo();
     
     console.log('\n📋 ステップ2: API接続テスト');
     const apiResult = await quickTest();
@@ -596,9 +722,15 @@ async function comprehensiveTest() {
     if (apiResult.success) {
         console.log('✅ API接続: 成功');
         console.log('🎯 推奨アプローチ: API呼び出し');
-        console.log('📝 設定:', apiResult.testCase);
+        console.log('📝 成功した設定:');
+        console.log(`   エンドポイント: ${apiResult.testCase.name}`);
+        console.log(`   認証方法: ${apiResult.tokenInfo ? 'Bearer Token' : 'Credentials Include'}`);
+        if (apiResult.headers) {
+            console.log(`   ヘッダー: ${JSON.stringify(apiResult.headers, null, 4)}`);
+        }
     } else {
         console.log('❌ API接続: 失敗');
+        console.log(`🔑 利用可能なアクセストークン: ${authInfo.accessTokens ? authInfo.accessTokens.length : 0}個`);
     }
     
     if (uiData.sessions.length > 0) {
@@ -611,7 +743,15 @@ async function comprehensiveTest() {
     console.log('\n📋 推奨事項:');
     if (apiResult.success) {
         console.log('🎯 API呼び出しが動作するため、メインスクリプトを更新してください');
-        console.log('📝 working_solution_template.jsに設定を記録してください');
+        console.log('📝 working_solution_template.jsに以下の設定を記録してください:');
+        console.log('');
+        console.log('WORKING_CONFIG = {');
+        console.log(`  endpoint: "${apiResult.testCase.endpoint}",`);
+        console.log(`  baseUrl: "https://api.devin.ai/org_AgnIPhGma3zfPVXZ",`);
+        console.log(`  credentials: "include",`);
+        console.log(`  headers: ${JSON.stringify(apiResult.headers || apiResult.testCase.headers, null, 4)}`);
+        console.log('};');
+        console.log('');
     } else if (uiData.sessions.length > 0) {
         console.log('🎯 UI データ抽出を使用してください');
         console.log('📝 UIスクレイピング機能をメインスクリプトに追加する必要があります');
@@ -620,12 +760,13 @@ async function comprehensiveTest() {
         console.log('  1. monitorNetworkRequests()でネットワーク監視を開始');
         console.log('  2. 管理コンソールでアクションを実行');
         console.log('  3. 実際のAPIエンドポイントを特定');
+        console.log('  4. 別のページ（セッション一覧など）でテストを実行');
     }
     
     return {
         api: apiResult,
         ui: uiData,
-        tokens: tokens
+        auth: authInfo
     };
 }
 

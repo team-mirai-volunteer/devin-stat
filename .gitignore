@@ -121,3 +121,8 @@ temp/
 reports/*.json
 reports/*.md
 !reports/.gitkeep
+
+# Test results and temporary files
+result.txt
+dom.txt
+*.tmp

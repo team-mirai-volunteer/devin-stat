@@ -47,6 +47,8 @@ collectDevinSessions("your_org_id", false)
 - ファイル名: `devin_sessions_YYYY-MM-DD.json`
 - コンソールにサマリー情報が表示されます
 
+**注意**: スクリプトはまずAuth0 Bearerトークンを使用したAPI呼び出しを試行し、失敗した場合はUI要素からのデータ抽出にフォールバックします。UI抽出は実際のDevin管理コンソールのUsage Historyページの4列グリッド構造に最適化されています。
+
 ## 出力データ形式
 
 収集されるデータは既存のPython分析システムと互換性があります：
@@ -144,22 +146,55 @@ debugNetworkRequests();
 console.log('CSRFトークン:', collector.getCSRFToken());
 console.log('認証トークン:', collector.getAuthToken());
 
-// 手動でAPIリクエストをテスト
-fetch('https://api.devin.ai/org_AgnIPhGma3zfPVXZ/billing/usage/sessions?page=1&page_size=1', {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+// Auth0トークンを手動で確認
+for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.includes('@@auth0spajs@@') && key.includes('backend.webapp.devin.ai')) {
+        try {
+            const value = localStorage.getItem(key);
+            const authData = JSON.parse(value);
+            if (authData && authData.body && authData.body.access_token) {
+                console.log('Auth0トークン発見:', {
+                    key: key.substring(0, 50) + '...',
+                    token_type: authData.body.token_type,
+                    access_token: authData.body.access_token.substring(0, 30) + '...'
+                });
+            }
+        } catch (e) {
+            console.log('Auth0トークン解析エラー:', e.message);
+        }
     }
-}).then(response => {
-    console.log('テストリクエスト結果:', response.status, response.statusText);
-    return response.json();
-}).then(data => {
-    console.log('テストデータ:', data);
-}).catch(error => {
-    console.error('テストエラー:', error);
-});
+}
+
+// 手動でAPIリクエストをテスト（Auth0 Bearer認証）
+const authToken = collector.getAuthToken();
+if (authToken) {
+    fetch('https://api.devin.ai/org_AgnIPhGma3zfPVXZ/billing/usage/sessions?page=1&page_size=1', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `${authToken.token_type} ${authToken.access_token}`
+        }
+    }).then(response => {
+        console.log('テストリクエスト結果:', response.status, response.statusText);
+        return response.json();
+    }).then(data => {
+        console.log('テストデータ:', data);
+    }).catch(error => {
+        console.error('テストエラー:', error);
+    });
+}
+
+// UI抽出をテスト
+const uiSessions = collector.extractSessionDataFromUI();
+console.log('UI抽出結果:', uiSessions);
+
+// Usage Historyページの構造を確認
+console.log('ページ構造確認:');
+console.log('- グリッドヘッダー:', document.querySelector('.grid.grid-cols-4 .font-medium')?.textContent);
+console.log('- データ行数:', document.querySelectorAll('.divide-y.divide-neutral-200.dark\\:divide-neutral-800 > div.grid.grid-cols-4').length);
 ```
 
 ### APIエンドポイントの確認方法

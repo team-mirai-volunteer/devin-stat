@@ -23,39 +23,66 @@ class DevinSessionCollector {
         console.log('🚀 Devinセッションデータ収集を開始します...');
         
         try {
-            let page = 1;
-            const pageSize = 20;
-            let hasMore = true;
-
-            while (hasMore) {
-                console.log(`📄 ページ ${page} を取得中...`);
-                
-                const response = await this.fetchSessionPage(page, pageSize);
-                
-                if (response.sessions && response.sessions.length > 0) {
-                    this.sessions.push(...response.sessions);
-                    this.totalSessions = response.total || this.sessions.length;
-                    
-                    console.log(`✅ ${response.sessions.length}件のセッションを取得 (合計: ${this.sessions.length}/${this.totalSessions})`);
-                    
-                    hasMore = this.sessions.length < this.totalSessions;
-                    page++;
-                } else {
-                    hasMore = false;
-                }
-
-                if (hasMore) {
-                    await this.sleep(500);
+            const authToken = this.getAuthToken();
+            if (authToken) {
+                console.log('🔑 Auth0トークンを使用してAPI経由で収集を試行...');
+                const apiSessions = await this.collectSessionsViaAPI();
+                if (apiSessions && apiSessions.length > 0) {
+                    console.log(`✅ API経由で ${apiSessions.length} セッションを収集`);
+                    this.sessions = apiSessions;
+                    return this.formatOutput();
                 }
             }
-
-            console.log(`🎉 収集完了: ${this.sessions.length}件のセッション`);
-            return this.formatOutput();
-
         } catch (error) {
-            console.error('❌ データ収集エラー:', error);
-            throw error;
+            console.log('❌ API収集に失敗:', error.message);
         }
+        
+        console.log('🔄 UI抽出にフォールバック...');
+        try {
+            const uiSessions = this.extractSessionDataFromUI();
+            if (uiSessions && uiSessions.length > 0) {
+                console.log(`✅ UI経由で ${uiSessions.length} セッションを収集`);
+                this.sessions = uiSessions;
+                return this.formatOutput();
+            } else {
+                throw new Error('UIからセッションデータが見つかりません');
+            }
+        } catch (error) {
+            console.error('❌ UI抽出も失敗:', error.message);
+            throw new Error('API・UI両方の収集方法が失敗しました');
+        }
+    }
+
+    async collectSessionsViaAPI() {
+        let page = 1;
+        const pageSize = 20;
+        let hasMore = true;
+        const allSessions = [];
+
+        while (hasMore) {
+            console.log(`📄 ページ ${page} を取得中...`);
+            
+            const response = await this.fetchSessionPage(page, pageSize);
+            
+            if (response.sessions && response.sessions.length > 0) {
+                allSessions.push(...response.sessions);
+                this.totalSessions = response.total || allSessions.length;
+                
+                console.log(`✅ ${response.sessions.length}件のセッションを取得 (合計: ${allSessions.length}/${this.totalSessions})`);
+                
+                hasMore = allSessions.length < this.totalSessions;
+                page++;
+            } else {
+                hasMore = false;
+            }
+
+            if (hasMore) {
+                await this.sleep(500);
+            }
+        }
+
+        console.log(`🎉 API収集完了: ${allSessions.length}件のセッション`);
+        return allSessions;
     }
 
     /**
@@ -78,7 +105,7 @@ class DevinSessionCollector {
 
         const authToken = this.getAuthToken();
         if (authToken) {
-            headers['Authorization'] = authToken;
+            headers['Authorization'] = `${authToken.token_type} ${authToken.access_token}`;
         }
 
         const response = await fetch(url, {
@@ -127,12 +154,32 @@ class DevinSessionCollector {
      * 認証トークンを取得
      */
     getAuthToken() {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            
+            if (key && key.includes('@@auth0spajs@@') && key.includes('backend.webapp.devin.ai')) {
+                try {
+                    const value = localStorage.getItem(key);
+                    const authData = JSON.parse(value);
+                    
+                    if (authData && authData.body && authData.body.access_token) {
+                        return {
+                            access_token: authData.body.access_token,
+                            token_type: authData.body.token_type || 'Bearer'
+                        };
+                    }
+                } catch (error) {
+                    console.log(`Auth0トークン解析エラー: ${error.message}`);
+                }
+            }
+        }
+        
         const authToken = localStorage.getItem('auth_token') || 
                          localStorage.getItem('access_token') ||
                          localStorage.getItem('jwt_token');
         
         if (authToken) {
-            return `Bearer ${authToken}`;
+            return { access_token: authToken, token_type: 'Bearer' };
         }
 
         const sessionToken = sessionStorage.getItem('auth_token') || 
@@ -140,7 +187,7 @@ class DevinSessionCollector {
                            sessionStorage.getItem('jwt_token');
         
         if (sessionToken) {
-            return `Bearer ${sessionToken}`;
+            return { access_token: sessionToken, token_type: 'Bearer' };
         }
 
         return null;
@@ -216,6 +263,174 @@ class DevinSessionCollector {
     /**
      * データをコンソールに表示
      */
+    extractSessionDataFromUI() {
+        console.log('🔍 UIからセッションデータを抽出中...');
+        
+        const sessions = [];
+        
+        const gridContainer = document.querySelector('.divide-y.divide-neutral-200.dark\\:divide-neutral-800');
+        if (!gridContainer) {
+            console.log('❌ Usage Historyグリッドコンテナが見つかりません');
+            return sessions;
+        }
+        
+        const gridRows = gridContainer.querySelectorAll('div.grid.grid-cols-4.gap-4.px-4.py-3');
+        console.log(`🔍 Usage Historyグリッド行: ${gridRows.length} 個`);
+        
+        gridRows.forEach((row, index) => {
+            if (row.classList.contains('cursor-pointer')) {
+                const sessionData = this.extractSessionFromGridRow(row);
+                if (sessionData) {
+                    sessions.push(sessionData);
+                    console.log(`✅ セッション ${index + 1}: ${sessionData.session_name}`);
+                }
+            }
+        });
+        
+        if (sessions.length === 0) {
+            console.log('🔍 フォールバック: 他のセレクターを試行中...');
+            
+            const fallbackSelectors = [
+                '.grid.grid-cols-4.gap-4.px-4.py-3.cursor-pointer',
+                '.grid.grid-cols-4[class*="hover:bg-"]',
+                '.divide-y > div.grid.grid-cols-4'
+            ];
+            
+            for (const selector of fallbackSelectors) {
+                const elements = document.querySelectorAll(selector);
+                console.log(`🔍 フォールバックセレクター "${selector}": ${elements.length} 個の要素`);
+                
+                elements.forEach((element, index) => {
+                    const sessionData = this.extractSessionFromGridRow(element);
+                    if (sessionData && !sessions.find(s => s.session_name === sessionData.session_name)) {
+                        sessions.push(sessionData);
+                        console.log(`✅ フォールバックセッション ${index + 1}: ${sessionData.session_name}`);
+                    }
+                });
+                
+                if (sessions.length > 0) break;
+            }
+        }
+        
+        const scripts = document.querySelectorAll('script');
+        scripts.forEach(script => {
+            if (script.textContent && script.textContent.includes('sessions')) {
+                try {
+                    const matches = script.textContent.match(/sessions["\']?\s*:\s*(\[.*?\])/);
+                    if (matches) {
+                        const sessionsData = JSON.parse(matches[1]);
+                        sessions.push(...sessionsData.map(s => this.formatSessionData(s)));
+                        console.log(`✅ スクリプトから ${sessionsData.length} セッションを抽出`);
+                    }
+                } catch (error) {
+                }
+            }
+        });
+        
+        console.log(`📊 合計 ${sessions.length} セッションを抽出`);
+        return sessions;
+    }
+
+    extractSessionFromGridRow(row) {
+        const sessionData = {};
+        
+        const columns = row.children;
+        if (columns.length < 3) {
+            return null;
+        }
+        
+        const sessionNameElement = columns[0];
+        if (sessionNameElement) {
+            const nameText = sessionNameElement.textContent.trim();
+            if (nameText && nameText !== 'Session') {
+                sessionData.session_name = nameText;
+            }
+        }
+        
+        const createdAtElement = columns[1];
+        if (createdAtElement) {
+            const dateText = createdAtElement.textContent.trim();
+            if (dateText && dateText !== 'Created At') {
+                sessionData.created_at = this.parseDate(dateText);
+            }
+        }
+        
+        const acuElement = columns[2];
+        if (acuElement) {
+            const acuText = acuElement.textContent.trim();
+            if (acuText && acuText !== 'ACUs Used') {
+                const acuMatch = acuText.match(/([\d.]+)/);
+                if (acuMatch) {
+                    sessionData.acu_used = parseFloat(acuMatch[1]);
+                }
+            }
+        }
+        
+        const sessionIdMatch = row.innerHTML.match(/session[_-]?id["\']?\s*[:=]\s*["\']?([a-f0-9]{32})["\']?/i);
+        if (sessionIdMatch) {
+            sessionData.session_id = sessionIdMatch[1];
+        }
+        
+        const linkElement = row.querySelector('a[href*="/sessions/"]');
+        if (linkElement) {
+            const href = linkElement.getAttribute('href');
+            const sessionIdFromHref = href.match(/\/sessions\/([a-f0-9]{32})/);
+            if (sessionIdFromHref) {
+                sessionData.session_id = sessionIdFromHref[1];
+            }
+        }
+        
+        return sessionData.session_name ? sessionData : null;
+    }
+
+    parseDate(dateText) {
+        try {
+            const date = new Date(dateText);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString();
+            }
+        } catch (error) {
+        }
+        
+        const relativeMatch = dateText.match(/(\d+)\s*(minute|hour|day|week|month)s?\s*ago/i);
+        if (relativeMatch) {
+            const amount = parseInt(relativeMatch[1]);
+            const unit = relativeMatch[2].toLowerCase();
+            const now = new Date();
+            
+            switch (unit) {
+                case 'minute':
+                    now.setMinutes(now.getMinutes() - amount);
+                    break;
+                case 'hour':
+                    now.setHours(now.getHours() - amount);
+                    break;
+                case 'day':
+                    now.setDate(now.getDate() - amount);
+                    break;
+                case 'week':
+                    now.setDate(now.getDate() - (amount * 7));
+                    break;
+                case 'month':
+                    now.setMonth(now.getMonth() - amount);
+                    break;
+            }
+            
+            return now.toISOString();
+        }
+        
+        return new Date().toISOString();
+    }
+
+    formatSessionData(sessionData) {
+        return {
+            session_name: sessionData.session_name || sessionData.name || 'Unknown Session',
+            session_id: sessionData.session_id || sessionData.id,
+            created_at: sessionData.created_at || sessionData.createdAt || new Date().toISOString(),
+            acu_used: sessionData.acu_used || sessionData.acuUsed || sessionData.acus_used || 0
+        };
+    }
+
     displaySummary(data) {
         console.log('\n📊 収集データサマリー:');
         console.log(`総セッション数: ${data.data.length}`);
