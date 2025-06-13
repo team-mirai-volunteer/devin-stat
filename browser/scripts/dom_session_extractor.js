@@ -674,6 +674,6 @@ async function startDOMExtraction() {
     }
 }
 
-console.log('✅ DOM専用セッション抽出スクリプトが読み込まれました');
+console.log('✅ DOM専用セッション抽出スクリプト（複数ページ対応）が読み込まれました');
 console.log('🚀 実行方法: startDOMExtraction()');
-console.log('🔧 デバッグ: extractSessionsDebug()');
+console.log('📋 複数ページ対応コマンド: addCurrentPage(), showStatus(), exportAll(), clearAll()');
