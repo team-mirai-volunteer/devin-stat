@@ -1,0 +1,120 @@
+🚀 包括的調査を開始: API + UI の両方をテスト
+index-CbwMaX36.js:40 ============================================================
+index-CbwMaX36.js:40
+📋 ステップ1: 認証情報確認
+index-CbwMaX36.js:40 🧪 テスト3: ブラウザの認証情報を詳細確認
+index-CbwMaX36.js:40 🍪 クッキー:
+index-CbwMaX36.js:40   _hjSessionUser_3853323: 設定済み (eyJpZCI6ImY0NjZiMDRj...)
+index-CbwMaX36.js:40   _legacy_auth0.DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk.is.authenticated: 設定済み (true...)
+index-CbwMaX36.js:40   auth0.DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk.is.authenticated: 設定済み (true...)
+index-CbwMaX36.js:40   _legacy_auth0.DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk.organization_hint: 設定済み (%22org_AgnIPhGma3zfP...)
+index-CbwMaX36.js:40   auth0.DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk.organization_hint: 設定済み (%22org_AgnIPhGma3zfP...)
+index-CbwMaX36.js:40   _hjSession_3853323: 設定済み (eyJpZCI6IjdhNjhhZjY0...)
+index-CbwMaX36.js:40 💾 LocalStorage:
+index-CbwMaX36.js:40   @@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::https://backend.webapp.devin.ai::openid profile email org_AgnIPhGma3zfPVXZ: 設定済み ({"body":{"access_tok...)
+index-CbwMaX36.js:40   devin_user_session_interactions_google-oauth2|112643481944466832095: 設定済み ({"devin-6709f93a480c...)
+index-CbwMaX36.js:40   post-auth-v1: 設定済み ({"user_id":"google-o...)
+index-CbwMaX36.js:40   google-oauth2|112643481944466832095-org_TuI4VNIGX5wLeQcQ-onboardingStep: 設定済み ("suggested-prompts"...)
+index-CbwMaX36.js:40   post-auth-complete-google-oauth2|112643481944466832095-org_iDYvHCNSdfhnClCf: 設定済み (true...)
+index-CbwMaX36.js:40   @@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::https://backend.webapp.devin.ai::openid profile email org_59RHUaMtRiE9rGRu: 設定済み ({"body":{"access_tok...)
+index-CbwMaX36.js:40   post-auth-complete-google-oauth2|112643481944466832095-personal-google-oauth2|112643481944466832095: 設定済み (true...)
+index-CbwMaX36.js:40   google-oauth2|112643481944466832095-org_AgnIPhGma3zfPVXZ-onboardingStep: 設定済み ("completed"...)
+index-CbwMaX36.js:40   @@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::https://backend.webapp.devin.ai::openid profile email: 設定済み ({"body":{"access_tok...)
+index-CbwMaX36.js:40   google-oauth2|112643481944466832095-org_iDYvHCNSdfhnClCf-onboardingStep: 設定済み ("completed"...)
+index-CbwMaX36.js:40   @@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::https://backend.webapp.devin.ai::openid profile email org_iDYvHCNSdfhnClCf: 設定済み ({"body":{"access_tok...)
+index-CbwMaX36.js:40   @@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::@@user@@: 設定済み ({"id_token":"eyJhbGc...)
+index-CbwMaX36.js:40   @@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::https://backend.webapp.devin.ai::openid profile email org_TuI4VNIGX5wLeQcQ: 設定済み ({"body":{"access_tok...)
+index-CbwMaX36.js:40   google-oauth2|112643481944466832095-org_59RHUaMtRiE9rGRu-onboardingStep: 設定済み ("git"...)
+index-CbwMaX36.js:40 💾 SessionStorage:
+index-CbwMaX36.js:40   認証関連のセッションデータが見つかりません
+index-CbwMaX36.js:40 🔒 CSRF Token: 未設定
+index-CbwMaX36.js:40 🌐 現在のURL: https://app.devin.ai/settings/usage?tab=history
+index-CbwMaX36.js:40 🌐 Origin: https://app.devin.ai
+index-CbwMaX36.js:40
+📋 ステップ2: API接続テスト
+index-CbwMaX36.js:40 ⚡ 最速テスト: 最も可能性の高い認証方法を試します
+index-CbwMaX36.js:40 🔍 発見された認証トークン: (14) ['@@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::…vin.ai::openid profile email org_AgnIPhGma3zfPVXZ', 'devin_user_session_interactions_google-oauth2|112643481944466832095', 'post-auth-v1', 'google-oauth2|112643481944466832095-org_TuI4VNIGX5wLeQcQ-onboardingStep', 'post-auth-complete-google-oauth2|112643481944466832095-org_iDYvHCNSdfhnClCf', '@@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::…vin.ai::openid profile email org_59RHUaMtRiE9rGRu', 'post-auth-complete-google-oauth2|112643481944466832095-personal-google-oauth2|112643481944466832095', 'google-oauth2|112643481944466832095-org_AgnIPhGma3zfPVXZ-onboardingStep', '@@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::…s://backend.webapp.devin.ai::openid profile email', 'google-oauth2|112643481944466832095-org_iDYvHCNSdfhnClCf-onboardingStep', '@@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::…vin.ai::openid profile email org_iDYvHCNSdfhnClCf', '@@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::@@user@@', '@@auth0spajs@@::DjKr4B4qtVDBVMBzE4FvveclTSkJYfhk::…vin.ai::openid profile email org_TuI4VNIGX5wLeQcQ', 'google-oauth2|112643481944466832095-org_59RHUaMtRiE9rGRu-onboardingStep']
+index-CbwMaX36.js:40
+🧪 テスト: 基本的なsessionsエンドポイント
+index-CbwMaX36.js:40 📍 URL: https://api.devin.ai/org_AgnIPhGma3zfPVXZ/sessions?creators=google-oauth2%7C112643481944466832095&created_date_from=2025-06-11T15:00:00.000Z&created_date_to=2099-12-31T14:59:59.999Z&is_archived=false
+index-CbwMaX36.js:40 📋 ヘッダー: {Accept: 'application/json', Content-Type: 'application/json'}
+Promise {<pending>}
+index-CbwMaX36.js:40
+
+
+           GET https://api.devin.ai/org_AgnIPhGma3zfPVXZ/sessions?creators=google-oauth2%7C112643481944466832095&created_date_from=2025-06-11T15:00:00.000Z&created_date_to=2099-12-31T14:59:59.999Z&is_archived=false 401 (Unauthorized)
+(anonymous) @ index-CbwMaX36.js:40
+(anonymous) @ index-CbwMaX36.js:168
+s @ index-CbwMaX36.js:168
+quickTest @ VM350:217
+comprehensiveTest @ VM350:714
+(anonymous) @ VM358:1Understand this error
+index-CbwMaX36.js:40 ✅ ステータス: 401
+index-CbwMaX36.js:40 ❌ エラー詳細: {"detail":"Unauthenticated"}
+index-CbwMaX36.js:40 ──────────────────────────────────────────────────
+index-CbwMaX36.js:40
+🧪 テスト: billing/usage/sessionsエンドポイント
+index-CbwMaX36.js:40 📍 URL: https://api.devin.ai/org_AgnIPhGma3zfPVXZ/billing/usage/sessions?page=1&page_size=20
+index-CbwMaX36.js:40 📋 ヘッダー: {Accept: 'application/json', Content-Type: 'application/json'}
+index-CbwMaX36.js:40
+
+
+           GET https://api.devin.ai/org_AgnIPhGma3zfPVXZ/billing/usage/sessions?page=1&page_size=20 401 (Unauthorized)
+(anonymous) @ index-CbwMaX36.js:40
+(anonymous) @ index-CbwMaX36.js:168
+s @ index-CbwMaX36.js:168
+quickTest @ VM350:217
+await in quickTest
+comprehensiveTest @ VM350:714
+(anonymous) @ VM358:1Understand this error
+index-CbwMaX36.js:40 ✅ ステータス: 401
+index-CbwMaX36.js:40 ❌ エラー詳細: {"detail":"Unauthenticated"}
+index-CbwMaX36.js:40 ──────────────────────────────────────────────────
+index-CbwMaX36.js:40
+❌ 全てのテストが失敗しました。詳細調査が必要です。
+index-CbwMaX36.js:40
+📋 ステップ3: UI データ抽出テスト
+index-CbwMaX36.js:40 🧪 UI要素からのデータ抽出テスト
+index-CbwMaX36.js:40 🔍 UI要素を検索中...
+index-CbwMaX36.js:40 📋 発見: ul li (27個の要素)
+index-CbwMaX36.js:40   1: Devin's ResourcesKnowledgePlaybooksSecrets...
+index-CbwMaX36.js:40 📋 発見: ol li (1個の要素)
+index-CbwMaX36.js:40   1: 情報収集JS実行confirm...
+index-CbwMaX36.js:40 📋 発見: [data-id] (1個の要素)
+index-CbwMaX36.js:40   1: .immersive-translate-input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  z...
+index-CbwMaX36.js:40
+🔍 セッション関連のテキストを検索...
+index-CbwMaX36.js:40 📝 "session" を含む要素: 21個
+index-CbwMaX36.js:40   1: View detailed usage information for each session...
+index-CbwMaX36.js:40   2: View session...
+index-CbwMaX36.js:40   3: View session...
+index-CbwMaX36.js:40 📝 "ACU" を含む要素: 1個
+index-CbwMaX36.js:40   1: ACUs Used...
+index-CbwMaX36.js:40 📝 "usage" を含む要素: 1個
+index-CbwMaX36.js:40   1: View detailed usage information for each session...
+index-CbwMaX36.js:40 📝 "作成" を含む要素: 1個
+index-CbwMaX36.js:40   1: PR統計JSON出力コード作成...
+index-CbwMaX36.js:40
+🔍 JSON データを含むscriptタグを検索...
+index-CbwMaX36.js:40 📜 セッション関連のJSONデータは見つかりませんでした
+index-CbwMaX36.js:40
+🔍 セッション情報パターンを検索...
+index-CbwMaX36.js:40
+📋 ステップ4: 結果まとめ
+index-CbwMaX36.js:40 ============================================================
+index-CbwMaX36.js:40 ❌ API接続: 失敗
+index-CbwMaX36.js:40 🔑 利用可能なアクセストークン: 0個
+index-CbwMaX36.js:40 ❌ UI データ抽出: セッションデータが見つかりません
+index-CbwMaX36.js:40
+📋 推奨事項:
+index-CbwMaX36.js:40 🔍 さらなる調査が必要です:
+index-CbwMaX36.js:40   1. monitorNetworkRequests()でネットワーク監視を開始
+index-CbwMaX36.js:40   2. 管理コンソールでアクションを実行
+index-CbwMaX36.js:40   3. 実際のAPIエンドポイントを特定
+index-CbwMaX36.js:40   4. 別のページ（セッション一覧など）でテストを実行
