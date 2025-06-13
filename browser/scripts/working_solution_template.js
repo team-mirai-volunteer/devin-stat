@@ -22,6 +22,11 @@ URL: https://api.devin.ai/org_AgnIPhGma3zfPVXZ/billing/usage/sessions?page=1&pag
 */
 
 const WORKING_CONFIG = {
+    endpoint: '',
+    baseUrl: 'https://api.devin.ai',
+    orgId: 'AgnIPhGma3zfPVXZ',
+    credentials: 'include',
+    headers: {}
 };
 
 function generateMainScriptUpdate() {
