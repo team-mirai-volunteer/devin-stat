@@ -404,11 +404,238 @@ async function runAllTests() {
     console.log('\n🎉 全テスト完了');
 }
 
+/**
+ * UI要素からのデータ抽出テスト
+ */
+function testUIDataExtraction() {
+    console.log('🧪 UI要素からのデータ抽出テスト');
+    
+    const extractedData = {
+        sessions: [],
+        metadata: {
+            extraction_method: 'ui_scraping',
+            timestamp: new Date().toISOString(),
+            url: window.location.href
+        }
+    };
+    
+    const possibleSelectors = [
+        'table tr',
+        'tbody tr',
+        '[role="row"]',
+        
+        'ul li',
+        'ol li',
+        '[role="listitem"]',
+        
+        '.card',
+        '.session',
+        '.item',
+        
+        '[data-session]',
+        '[data-id]',
+        '[data-session-id]',
+        
+        '.container',
+        '.content',
+        '.main'
+    ];
+    
+    console.log('🔍 UI要素を検索中...');
+    
+    possibleSelectors.forEach(selector => {
+        try {
+            const elements = document.querySelectorAll(selector);
+            if (elements.length > 0) {
+                console.log(`📋 発見: ${selector} (${elements.length}個の要素)`);
+                
+                Array.from(elements).slice(0, 3).forEach((element, index) => {
+                    const text = element.textContent?.trim().substring(0, 100);
+                    if (text && text.length > 10) {
+                        console.log(`  ${index + 1}: ${text}...`);
+                    }
+                });
+            }
+        } catch (error) {
+            console.log(`❌ セレクター ${selector} でエラー:`, error.message);
+        }
+    });
+    
+    console.log('\n🔍 セッション関連のテキストを検索...');
+    const sessionKeywords = ['session', 'セッション', 'acu', 'ACU', 'usage', '使用量', 'created', '作成'];
+    
+    sessionKeywords.forEach(keyword => {
+        const xpath = `//*[contains(text(), '${keyword}')]`;
+        try {
+            const result = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            if (result.snapshotLength > 0) {
+                console.log(`📝 "${keyword}" を含む要素: ${result.snapshotLength}個`);
+                
+                for (let i = 0; i < Math.min(3, result.snapshotLength); i++) {
+                    const element = result.snapshotItem(i);
+                    const text = element.textContent?.trim().substring(0, 80);
+                    console.log(`  ${i + 1}: ${text}...`);
+                }
+            }
+        } catch (error) {
+            console.log(`❌ XPath検索でエラー (${keyword}):`, error.message);
+        }
+    });
+    
+    console.log('\n🔍 JSON データを含むscriptタグを検索...');
+    const scriptTags = document.querySelectorAll('script');
+    let foundJsonData = false;
+    
+    scriptTags.forEach((script, index) => {
+        const content = script.textContent || script.innerHTML;
+        if (content && (content.includes('sessions') || content.includes('session_id') || content.includes('acu_used'))) {
+            console.log(`📜 Script ${index + 1}: セッション関連データを発見`);
+            console.log(`  内容: ${content.substring(0, 200)}...`);
+            foundJsonData = true;
+            
+            try {
+                const jsonMatch = content.match(/\{.*"sessions".*\}/s);
+                if (jsonMatch) {
+                    const jsonData = JSON.parse(jsonMatch[0]);
+                    console.log('🎉 JSONデータの解析に成功!');
+                    console.log('📊 データ構造:', Object.keys(jsonData));
+                    extractedData.sessions = jsonData.sessions || jsonData;
+                }
+            } catch (error) {
+                console.log('❌ JSON解析エラー:', error.message);
+            }
+        }
+    });
+    
+    if (!foundJsonData) {
+        console.log('📜 セッション関連のJSONデータは見つかりませんでした');
+    }
+    
+    console.log('\n🔍 セッション情報パターンを検索...');
+    const pageText = document.body.textContent || '';
+    
+    const sessionIdPattern = /[a-f0-9]{32}/g;
+    const sessionIds = pageText.match(sessionIdPattern);
+    if (sessionIds && sessionIds.length > 0) {
+        console.log(`🆔 セッションIDらしき文字列: ${sessionIds.length}個発見`);
+        sessionIds.slice(0, 5).forEach((id, index) => {
+            console.log(`  ${index + 1}: ${id}`);
+        });
+    }
+    
+    const acuPattern = /\d+\.\d+.*acu/gi;
+    const acuMatches = pageText.match(acuPattern);
+    if (acuMatches && acuMatches.length > 0) {
+        console.log(`💰 ACU使用量らしき文字列: ${acuMatches.length}個発見`);
+        acuMatches.slice(0, 5).forEach((match, index) => {
+            console.log(`  ${index + 1}: ${match}`);
+        });
+    }
+    
+    return extractedData;
+}
+
+/**
+ * ネットワークリクエストを監視してAPIエンドポイントを特定
+ */
+function monitorNetworkRequests() {
+    console.log('🌐 ネットワークリクエスト監視を開始...');
+    console.log('📝 この後、管理コンソールで何かアクション（ページ更新、メニュークリックなど）を実行してください');
+    
+    const originalFetch = window.fetch;
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    
+    window.fetch = function(...args) {
+        const url = args[0];
+        if (typeof url === 'string' && (url.includes('api.devin.ai') || url.includes('sessions'))) {
+            console.log('🔍 Fetch API呼び出しを検出:');
+            console.log(`  URL: ${url}`);
+            console.log(`  オプション:`, args[1]);
+        }
+        return originalFetch.apply(this, args);
+    };
+    
+    XMLHttpRequest.prototype.open = function(method, url, ...args) {
+        if (typeof url === 'string' && (url.includes('api.devin.ai') || url.includes('sessions'))) {
+            console.log('🔍 XMLHttpRequest呼び出しを検出:');
+            console.log(`  Method: ${method}`);
+            console.log(`  URL: ${url}`);
+        }
+        return originalXHROpen.apply(this, [method, url, ...args]);
+    };
+    
+    console.log('✅ ネットワーク監視を設定しました');
+    console.log('📝 監視を停止するには: stopNetworkMonitoring()');
+    
+    window.stopNetworkMonitoring = function() {
+        window.fetch = originalFetch;
+        XMLHttpRequest.prototype.open = originalXHROpen;
+        console.log('🛑 ネットワーク監視を停止しました');
+    };
+}
+
+/**
+ * 包括的な調査: API + UI の両方をテスト
+ */
+async function comprehensiveTest() {
+    console.log('🚀 包括的調査を開始: API + UI の両方をテスト');
+    console.log('='.repeat(60));
+    
+    console.log('\n📋 ステップ1: 認証情報確認');
+    const tokens = testAuthInfo();
+    
+    console.log('\n📋 ステップ2: API接続テスト');
+    const apiResult = await quickTest();
+    
+    console.log('\n📋 ステップ3: UI データ抽出テスト');
+    const uiData = testUIDataExtraction();
+    
+    console.log('\n📋 ステップ4: 結果まとめ');
+    console.log('='.repeat(60));
+    
+    if (apiResult.success) {
+        console.log('✅ API接続: 成功');
+        console.log('🎯 推奨アプローチ: API呼び出し');
+        console.log('📝 設定:', apiResult.testCase);
+    } else {
+        console.log('❌ API接続: 失敗');
+    }
+    
+    if (uiData.sessions.length > 0) {
+        console.log('✅ UI データ抽出: 成功');
+        console.log(`📊 抽出されたセッション数: ${uiData.sessions.length}`);
+    } else {
+        console.log('❌ UI データ抽出: セッションデータが見つかりません');
+    }
+    
+    console.log('\n📋 推奨事項:');
+    if (apiResult.success) {
+        console.log('🎯 API呼び出しが動作するため、メインスクリプトを更新してください');
+        console.log('📝 working_solution_template.jsに設定を記録してください');
+    } else if (uiData.sessions.length > 0) {
+        console.log('🎯 UI データ抽出を使用してください');
+        console.log('📝 UIスクレイピング機能をメインスクリプトに追加する必要があります');
+    } else {
+        console.log('🔍 さらなる調査が必要です:');
+        console.log('  1. monitorNetworkRequests()でネットワーク監視を開始');
+        console.log('  2. 管理コンソールでアクションを実行');
+        console.log('  3. 実際のAPIエンドポイントを特定');
+    }
+    
+    return {
+        api: apiResult,
+        ui: uiData,
+        tokens: tokens
+    };
+}
+
 // 使用方法を表示
-console.log('✅ 最小限APIテストスクリプト (強化版) が読み込まれました');
+console.log('✅ 最小限APIテストスクリプト (包括版) が読み込まれました');
 console.log('📝 推奨使用方法:');
-console.log('  quickTest() - 最速で動作する方法を特定 (推奨)');
-console.log('  runAllTests() - 全テストを実行');
+console.log('  comprehensiveTest() - API + UI の包括的テスト (推奨)');
+console.log('  quickTest() - 最速でAPI認証方法を特定');
+console.log('  testUIDataExtraction() - UI要素からデータ抽出をテスト');
+console.log('  monitorNetworkRequests() - ネットワークリクエストを監視');
 console.log('');
 console.log('📝 個別テスト:');
 console.log('  testAuthInfo() - 認証情報を確認');
@@ -416,3 +643,4 @@ console.log('  testCorrectEndpoint() - 正しいエンドポイントをテス�
 console.log('  testOldEndpoint() - 古いエンドポイントをテスト');
 console.log('  testAdvancedAuth() - 高度な認証方法をテスト');
 console.log('  testPagination() - ページネーションをテスト');
+console.log('  runAllTests() - 全APIテストを実行');
