@@ -1,19 +1,29 @@
 /**
  * DOM専用セッションデータ抽出スクリプト
  * Devin管理コンソールのUsage HistoryページからDOMを直接解析してセッションデータを収集
+ * 複数ページ対応: 各ページでデータを累積し、最後に一括出力
  */
+
+window.DevinSessionStorage = window.DevinSessionStorage || {
+    sessions: [],
+    pageCount: 0,
+    totalACU: 0,
+    startTime: new Date().toISOString(),
+    duplicateIds: new Set()
+};
 
 class DOMSessionExtractor {
     constructor() {
         this.sessions = [];
         this.debugMode = true;
+        this.storage = window.DevinSessionStorage;
     }
 
     /**
-     * メイン実行関数
+     * 現在のページからセッションデータを抽出して累積ストレージに追加
      */
-    async extractAllSessions() {
-        console.log('🚀 DOM専用セッションデータ抽出を開始...');
+    async extractCurrentPageSessions() {
+        console.log('🚀 現在のページからセッションデータを抽出中...');
         
         try {
             if (!this.isOnUsageHistoryPage()) {
@@ -23,22 +33,106 @@ class DOMSessionExtractor {
             const sessions = this.extractSessionsFromGrid();
             
             if (sessions.length === 0) {
-                console.log('⚠️ セッションデータが見つかりません。ページが完全に読み込まれているか確認してください。');
-                return this.fallbackExtraction();
+                console.log('⚠️ セッションデータが見つかりません。フォールバック抽出を試行中...');
+                const fallbackSessions = this.fallbackExtraction();
+                this.addSessionsToStorage(fallbackSessions);
+                return fallbackSessions.length;
             }
 
-            console.log(`✅ ${sessions.length} 個のセッションを抽出しました`);
+            this.addSessionsToStorage(sessions);
+            console.log(`✅ ${sessions.length} 個のセッションを累積ストレージに追加しました`);
             
-            const formattedData = this.formatSessionData(sessions);
-            
-            this.downloadAsJSON(formattedData);
-            
-            return formattedData;
+            return sessions.length;
             
         } catch (error) {
             console.error('❌ DOM抽出エラー:', error.message);
             throw error;
         }
+    }
+
+    /**
+     * セッションデータを累積ストレージに追加（重複チェック付き）
+     */
+    addSessionsToStorage(sessions) {
+        let addedCount = 0;
+        let duplicateCount = 0;
+        
+        for (const session of sessions) {
+            // session_idによる重複チェック
+            if (!this.storage.duplicateIds.has(session.session_id)) {
+                this.storage.sessions.push({
+                    ...session,
+                    page_number: this.storage.pageCount + 1,
+                    extraction_timestamp: new Date().toISOString()
+                });
+                this.storage.duplicateIds.add(session.session_id);
+                this.storage.totalACU += (session.acu_used || 0);
+                addedCount++;
+            } else {
+                duplicateCount++;
+            }
+        }
+        
+        this.storage.pageCount++;
+        
+        console.log(`📊 ページ ${this.storage.pageCount}: ${addedCount} 件追加, ${duplicateCount} 件重複スキップ`);
+        console.log(`📈 累積: ${this.storage.sessions.length} セッション, ${this.storage.totalACU.toFixed(4)} ACU`);
+    }
+
+    /**
+     * 累積データの状況を表示
+     */
+    showStorageStatus() {
+        console.log('📊 累積データ状況:');
+        console.log(`   セッション数: ${this.storage.sessions.length}`);
+        console.log(`   処理ページ数: ${this.storage.pageCount}`);
+        console.log(`   総ACU使用量: ${this.storage.totalACU.toFixed(4)}`);
+        console.log(`   開始時刻: ${this.storage.startTime}`);
+        console.log(`   最新更新: ${new Date().toISOString()}`);
+        
+        if (this.storage.sessions.length > 0) {
+            const latestSession = this.storage.sessions[this.storage.sessions.length - 1];
+            console.log(`   最新セッション: ${latestSession.session_name?.substring(0, 50)}...`);
+        }
+    }
+
+    /**
+     * 累積データをクリア
+     */
+    clearStorage() {
+        this.storage.sessions = [];
+        this.storage.pageCount = 0;
+        this.storage.totalACU = 0;
+        this.storage.startTime = new Date().toISOString();
+        this.storage.duplicateIds.clear();
+        console.log('🗑️ 累積データをクリアしました');
+    }
+
+    /**
+     * 累積データを全てJSONでエクスポート
+     */
+    exportAllData() {
+        if (this.storage.sessions.length === 0) {
+            console.log('⚠️ エクスポートするデータがありません。先にページからデータを抽出してください。');
+            return null;
+        }
+        
+        const exportData = {
+            sessions: this.storage.sessions,
+            total: this.storage.sessions.length,
+            total_acu_used: this.storage.totalACU,
+            pages_processed: this.storage.pageCount,
+            extraction_start: this.storage.startTime,
+            extraction_end: new Date().toISOString(),
+            extraction_method: 'dom-multi-page'
+        };
+        
+        this.downloadAsJSON(exportData);
+        
+        console.log('📥 累積データをJSONファイルとしてダウンロードしました');
+        console.log(`📊 最終結果: ${exportData.total} セッション, ${exportData.total_acu_used.toFixed(4)} ACU, ${exportData.pages_processed} ページ`);
+        
+        return exportData;
     }
 
     /**
@@ -476,38 +570,106 @@ class DOMSessionExtractor {
     }
 }
 
-async function extractSessionsFromDOM() {
+
+/**
+ * 現在のページからデータを抽出して累積ストレージに追加
+ */
+async function addCurrentPage() {
     const extractor = new DOMSessionExtractor();
-    return await extractor.extractAllSessions();
+    try {
+        const count = await extractor.extractCurrentPageSessions();
+        extractor.showStorageStatus();
+        return count;
+    } catch (error) {
+        console.error('❌ ページ抽出失敗:', error.message);
+        throw error;
+    }
+}
+
+/**
+ * 累積データの状況を表示
+ */
+function showStatus() {
+    const extractor = new DOMSessionExtractor();
+    extractor.showStorageStatus();
+}
+
+/**
+ * 累積データを全てJSONでエクスポート
+ */
+function exportAll() {
+    const extractor = new DOMSessionExtractor();
+    return extractor.exportAllData();
+}
+
+/**
+ * 累積データをクリア
+ */
+function clearAll() {
+    const extractor = new DOMSessionExtractor();
+    extractor.clearStorage();
+}
+
+async function extractSessionsFromDOM() {
+    console.log('⚠️ 注意: この関数は単一ページ用です。複数ページ対応には addCurrentPage() を使用してください。');
+    const extractor = new DOMSessionExtractor();
+    const sessions = extractor.extractSessionsFromGrid();
+    if (sessions.length === 0) {
+        return extractor.fallbackExtraction();
+    }
+    const formattedData = extractor.formatSessionData(sessions);
+    extractor.downloadAsJSON(formattedData);
+    return formattedData;
 }
 
 async function extractSessionsDebug() {
+    console.log('⚠️ 注意: この関数は単一ページ用です。複数ページ対応には addCurrentPage() を使用してください。');
     const extractor = new DOMSessionExtractor();
     extractor.debugMode = true;
-    return await extractor.extractAllSessions();
+    const sessions = extractor.extractSessionsFromGrid();
+    if (sessions.length === 0) {
+        return extractor.fallbackExtraction();
+    }
+    const formattedData = extractor.formatSessionData(sessions);
+    extractor.downloadAsJSON(formattedData);
+    return formattedData;
 }
 
 async function startDOMExtraction() {
-    console.log('🚀 DOM抽出を開始します...');
-    console.log('📋 使用方法:');
+    console.log('🚀 DOM抽出（複数ページ対応）を開始します...');
+    console.log('');
+    console.log('📋 複数ページ対応の使用方法:');
     console.log('1. Devin管理コンソールのUsage Historyページに移動');
     console.log('2. ページが完全に読み込まれるまで待機');
-    console.log('3. このスクリプトを実行');
+    console.log('3. addCurrentPage() を実行してデータを累積');
+    console.log('4. 次のページに移動して再度 addCurrentPage() を実行');
+    console.log('5. 全ページ処理後、exportAll() で全データをダウンロード');
+    console.log('');
+    console.log('📋 利用可能なコマンド:');
+    console.log('   addCurrentPage()  - 現在のページのデータを累積に追加');
+    console.log('   showStatus()      - 累積データの状況を表示');
+    console.log('   exportAll()       - 累積データを全てJSONでダウンロード');
+    console.log('   clearAll()        - 累積データをクリア');
     console.log('');
     
     try {
-        const result = await extractSessionsFromDOM();
-        console.log('✅ 抽出完了!');
-        console.log(`📊 ${result.sessions.length} セッション、合計 ${result.total_acu_used} ACU`);
-        return result;
+        console.log('🔄 最初のページを自動処理中...');
+        const count = await addCurrentPage();
+        console.log('✅ 初期ページ処理完了!');
+        console.log('');
+        console.log('📝 次の手順:');
+        console.log('1. 次のページに移動');
+        console.log('2. addCurrentPage() を実行');
+        console.log('3. 全ページ完了後、exportAll() を実行');
+        return count;
     } catch (error) {
-        console.error('❌ 抽出失敗:', error.message);
+        console.error('❌ 初期ページ処理失敗:', error.message);
         console.log('');
         console.log('🔧 トラブルシューティング:');
         console.log('1. Usage Historyページ (https://app.devin.ai/settings/usage?tab=history) にいることを確認');
         console.log('2. ページが完全に読み込まれていることを確認');
         console.log('3. セッションデータが表示されていることを確認');
-        console.log('4. extractSessionsDebug() でデバッグモードを試す');
+        console.log('4. clearAll() でデータをクリアしてやり直し');
         throw error;
     }
 }
