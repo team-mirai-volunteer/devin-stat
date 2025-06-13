@@ -46,14 +46,64 @@ class DOMSessionExtractor {
      */
     isOnUsageHistoryPage() {
         const url = window.location.href;
-        const hasUsageHistory = document.querySelector('h2')?.textContent?.includes('Usage History');
-        const hasACUColumn = document.body.textContent.includes('ACUs Used');
+        
+        const usageHistorySelectors = [
+            'h1, h2, h3, h4, h5, h6',
+            '[class*="heading"], [class*="title"], [class*="header"]',
+            'div, span, p',
+            '*'
+        ];
+        
+        let hasUsageHistory = false;
+        
+        for (const selector of usageHistorySelectors) {
+            try {
+                const elements = document.querySelectorAll(selector);
+                for (const element of elements) {
+                    const text = element.textContent || '';
+                    if (text.toLowerCase().includes('usage') && text.toLowerCase().includes('history')) {
+                        hasUsageHistory = true;
+                        console.log(`📋 Usage Historyヘッダー発見: "${text.trim()}" (${selector})`);
+                        break;
+                    }
+                }
+                if (hasUsageHistory) break;
+            } catch (e) {
+            }
+        }
+        
+        if (!hasUsageHistory) {
+            const urlCheck = url.includes('usage') || url.includes('history');
+            const bodyText = document.body.textContent.toLowerCase();
+            const contentCheck = bodyText.includes('usage') && (bodyText.includes('history') || bodyText.includes('session'));
+            hasUsageHistory = urlCheck || contentCheck;
+            
+            if (hasUsageHistory) {
+                console.log('📋 Usage History判定: URL/コンテンツベース ✅');
+            }
+        }
+        
+        const acuPatterns = [
+            'ACUs Used', 'ACU Used', 'ACUs', 'ACU', 
+            'Usage', 'Compute Units', 'Units Used'
+        ];
+        
+        let hasACUColumn = false;
+        const bodyText = document.body.textContent;
+        
+        for (const pattern of acuPatterns) {
+            if (bodyText.includes(pattern)) {
+                hasACUColumn = true;
+                console.log(`📋 ACUカラム発見: "${pattern}"`);
+                break;
+            }
+        }
         
         console.log('📍 現在のURL:', url);
         console.log('📋 Usage Historyヘッダー:', hasUsageHistory ? '✅' : '❌');
         console.log('📋 ACUs Usedカラム:', hasACUColumn ? '✅' : '❌');
         
-        return hasUsageHistory && hasACUColumn;
+        return hasUsageHistory || hasACUColumn;
     }
 
     /**
@@ -67,7 +117,18 @@ class DOMSessionExtractor {
         const gridSelectors = [
             '.divide-y.divide-neutral-200.dark\\:divide-neutral-800 > div.grid.grid-cols-4.gap-4.px-4.py-3.cursor-pointer',
             'div.grid.cursor-pointer.grid-cols-4.gap-4.px-4.py-3',
-            '[class*="grid"][class*="cursor-pointer"][class*="grid-cols-4"]'
+            
+            '[class*="grid"][class*="cursor-pointer"][class*="grid-cols-4"]',
+            '[class*="grid"][class*="grid-cols-4"][class*="gap-4"]',
+            'div[class*="grid-cols-4"]',
+            
+            'tbody tr, table tr',
+            '[role="row"]',
+            
+            'div[class*="cursor-pointer"]',
+            '[class*="hover:bg"]',
+            
+            'div[onclick], div[data-testid*="row"], div[data-testid*="session"]'
         ];
 
         for (const selector of gridSelectors) {
@@ -76,16 +137,50 @@ class DOMSessionExtractor {
                 console.log(`🔍 セレクター "${selector}": ${gridRows.length} 行発見`);
                 
                 if (gridRows.length > 0) {
-                    gridRows.forEach((row, index) => {
-                        const sessionData = this.extractSessionFromGridRow(row, index);
-                        if (sessionData) {
-                            sessions.push(sessionData);
-                        }
+                    const validRows = Array.from(gridRows).filter(row => {
+                        const text = row.textContent || '';
+                        return text.length > 10 && (
+                            text.includes('ACU') || 
+                            text.match(/\d+\.?\d*/) || 
+                            text.toLowerCase().includes('session') ||
+                            text.includes('ago') ||
+                            text.includes('2025') || text.includes('2024')
+                        );
                     });
-                    break; // 成功したら他のセレクターは試さない
+                    
+                    console.log(`✅ 有効な行: ${validRows.length}/${gridRows.length}`);
+                    
+                    if (validRows.length > 0) {
+                        validRows.forEach((row, index) => {
+                            const sessionData = this.extractSessionFromGridRow(row, index);
+                            if (sessionData) {
+                                sessions.push(sessionData);
+                            }
+                        });
+                        break; // 成功したら他のセレクターは試さない
+                    }
                 }
             } catch (error) {
                 console.log(`❌ セレクター "${selector}" でエラー:`, error.message);
+            }
+        }
+
+        if (sessions.length === 0) {
+            console.log('🔍 デバッグ: ページ構造を調査中...');
+            
+            const gridElements = document.querySelectorAll('[class*="grid"]');
+            console.log(`📊 grid要素: ${gridElements.length} 個`);
+            
+            const clickableElements = document.querySelectorAll('[class*="cursor-pointer"]');
+            console.log(`👆 cursor-pointer要素: ${clickableElements.length} 個`);
+            
+            const acuElements = Array.from(document.querySelectorAll('*')).filter(el => 
+                el.textContent && el.textContent.includes('ACU')
+            );
+            console.log(`💰 ACU要素: ${acuElements.length} 個`);
+            
+            if (acuElements.length > 0) {
+                console.log('📋 ACU要素の例:', acuElements[0].textContent.substring(0, 100));
             }
         }
 
@@ -278,13 +373,70 @@ class DOMSessionExtractor {
                     session_id: `fallback-${index}`,
                     created_at: new Date().toISOString(),
                     acu_used: acuMatch ? parseFloat(acuMatch[1]) : 0,
-                    extraction_method: 'fallback'
+                    extraction_method: 'fallback-text'
                 });
             });
         }
+        
+        const allElements = document.querySelectorAll('*');
+        const acuElements = Array.from(allElements).filter(el => {
+            const text = el.textContent || '';
+            return text.match(/\d+\.?\d*\s*ACU/i) && text.length < 200; // 長すぎる要素は除外
+        });
+        
+        console.log(`🔍 ACU要素発見: ${acuElements.length} 個`);
+        
+        acuElements.forEach((element, index) => {
+            const text = element.textContent || '';
+            const acuMatch = text.match(/(\d+\.?\d*)\s*ACU/i);
+            
+            if (acuMatch && !sessions.some(s => s.acu_used === parseFloat(acuMatch[1]))) {
+                let sessionName = 'Unknown Session';
+                let parent = element.parentElement;
+                
+                for (let i = 0; i < 5 && parent; i++) {
+                    const parentText = parent.textContent || '';
+                    const lines = parentText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    
+                    for (const line of lines) {
+                        if (line.length > 5 && line.length < 100 && 
+                            !line.includes('ACU') && 
+                            !line.includes('ago') &&
+                            !line.match(/^\d+$/)) {
+                            sessionName = line;
+                            break;
+                        }
+                    }
+                    
+                    if (sessionName !== 'Unknown Session') break;
+                    parent = parent.parentElement;
+                }
+                
+                sessions.push({
+                    session_name: sessionName,
+                    session_id: `fallback-element-${index}`,
+                    created_at: new Date().toISOString(),
+                    acu_used: parseFloat(acuMatch[1]),
+                    extraction_method: 'fallback-element'
+                });
+            }
+        });
+        
+        const dateElements = Array.from(allElements).filter(el => {
+            const text = el.textContent || '';
+            return text.match(/\d+\s*(minute|hour|day|week|month)s?\s*ago/i) ||
+                   text.match(/202[4-5]-\d{2}-\d{2}/) ||
+                   text.includes('ago');
+        });
+        
+        console.log(`📅 日付要素発見: ${dateElements.length} 個`);
+        
+        const uniqueSessions = sessions.filter((session, index, self) => 
+            index === self.findIndex(s => s.acu_used === session.acu_used)
+        );
 
-        console.log(`🔄 フォールバック抽出で ${sessions.length} セッションを発見`);
-        return sessions;
+        console.log(`🔄 フォールバック抽出で ${uniqueSessions.length} セッションを発見`);
+        return uniqueSessions;
     }
 
     /**
