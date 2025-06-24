@@ -16,6 +16,7 @@ from src.collectors.devin_api_client import DevinAPIClient
 from src.collectors.usage_history_collector import UsageHistoryCollector
 from src.analyzers.devin_stats_analyzer import DevinStatsAnalyzer
 from src.generators.devin_report_generator import DevinReportGenerator
+from src.generators.looker_studio_exporter import LookerStudioExporter
 from src.utils.github_api import load_config
 
 
@@ -45,6 +46,11 @@ def parse_args():
     parser.add_argument(
         "--usage-file",
         help="Usage HistoryファイルのパスCSV/JSON形式）"
+    )
+    parser.add_argument(
+        "--looker-studio",
+        help="Looker Studio用データエクスポートを生成",
+        action="store_true"
     )
     return parser.parse_args()
 
@@ -117,6 +123,14 @@ def main():
         analysis_file = Path(args.output_dir) / "devin_analysis.json"
         analyzer.save_analysis_results(analysis, str(analysis_file))
         print(f"  ✅ 分析結果: {analysis_file}")
+        
+        if args.looker_studio:
+            print("\n6. Looker Studio用エクスポート生成中...")
+            exporter = LookerStudioExporter(config)
+            exports = exporter.generate_looker_studio_exports(analysis, args.output_dir)
+            
+            for export_type, file_path in exports.items():
+                print(f"  ✅ {export_type.replace('_', ' ').title()}: {file_path}")
     
     print("\n=== 分析完了 ===")
 
