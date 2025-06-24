@@ -84,6 +84,9 @@ python scripts/analyze_devin_stats.py --output-dir ./reports
 
 # 特定のPRデータディレクトリを指定
 python scripts/analyze_devin_stats.py --pr-data-dir /path/to/pr-data/prs
+
+# Looker Studio用データエクスポートを生成
+python scripts/analyze_devin_stats.py --looker-studio
 ```
 
 ### ブラウザベースのデータ収集
@@ -115,17 +118,43 @@ cat browser/docs/chrome_devtools_usage.md
 python scripts/generate_daily_report.py
 ```
 
-## 自動化
+## 🤖 自動化
 
-GitHub Actionsワークフローが毎日04:00 UTC（13:00 JST）に自動実行され、以下を行います：
+### GitHub Actions
 
-1. 最新のPRデータを取得
-2. Devin統計分析を実行
-3. 日次レポートを生成
-4. レポートをリポジトリにコミット
+このリポジトリでは、GitHub Actionsを使用して手動でレポートを生成できます。
 
-手動実行も可能です：
-- GitHubリポジトリの「Actions」タブから「Devin統計日次更新」ワークフローを実行
+- **実行方法**: GitHubの「Actions」タブから「Devin統計日次更新」ワークフローを手動実行
+- **実行内容**: PRデータ取得、統計分析実行、日次レポート生成、リポジトリコミット
+- **注意**: 複数アカウントからの手動データ収集が必要なため、日次自動実行は無効化されています
+
+### 🔄 データ収集ワークフロー
+
+#### 完全なデータ収集プロセス
+
+1. **両アカウントからのブラウザ収集**:
+   ```javascript
+   // アカウント1
+   collectDevinSessions("AgnIPhGma3zfPVXZ", true)
+   
+   // アカウント2（組織ID要確認）
+   collectDevinSessions("second_org_id_here", true)
+   ```
+
+2. **データ統合**:
+   ```bash
+   # 収集したJSONファイルを配置後
+   python scripts/integrate_browser_data.py
+   ```
+
+3. **分析実行とLooker Studio用エクスポート**:
+   ```bash
+   # 基本分析
+   python scripts/analyze_devin_stats.py --usage-file data/usage_history.json
+   
+   # Looker Studio用データも同時生成
+   python scripts/analyze_devin_stats.py --usage-file data/usage_history.json --looker-studio
+   ```
 
 ## 取得可能な統計
 
@@ -135,7 +164,20 @@ GitHub Actionsワークフローが毎日04:00 UTC（13:00 JST）に自動実行
 - 成功率（マージ率）
 - 日別・月別作成・マージ数
 
+### 📊 Looker Studio用エクスポート
 
+`--looker-studio` オプションを使用すると、以下の追加ファイルが生成されます：
+
+- `looker_studio_data_YYYYMMDD.csv`: Looker Studio用フラットCSVデータ
+- `looker_studio_data_YYYYMMDD.json`: Looker Studio用フラットJSONデータ
+
+これらのファイルは時系列可視化に最適化されたフラット構造で、以下の列を含みます：
+- `date`: 日付（YYYY-MM-DD形式）
+- `metric_type`: メトリック種別（pr_created, pr_merged, success_rate等）
+- `value`: 値
+- `category`: カテゴリ（daily, monthly, summary, acu_analysis）
+- `data_source`: データソース（estimated または actual_usage_history）
+- `analysis_date`: 分析実行日時
 
 ### クレジット使用量（Devin API利用時）
 - 日別・月別クレジット消費量
